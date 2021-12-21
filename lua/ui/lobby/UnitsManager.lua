@@ -996,8 +996,8 @@ function CreateGridCell(targetGrid, icon, col, row)
     targetGrid.cells = targetGrid.rows * targetGrid.cols
 end
 
-function CreateGrid(parent, cellSize, cellSize, cols, rows)
-    local grid = Grid(parent, cellSize, cellSize)
+function CreateGrid(parent, cellSizeX, cellSizeY, cols, rows)
+    local grid = Grid(parent, cellSizeX, cellSizeY)
     grid.rows = 0
     grid.cols = 0
     grid.icons = 0
