@@ -404,8 +404,8 @@ Callbacks.BoxFormationSpawn = function(data)
         or math.floor(val) + (math.mod(FootprintSize(axe),2) == 1 and 0.5 or 0)
     end
 
-    local posX = math.floor(data.pos[1])
-    local posZ = math.floor(data.pos[3])
+    local posX = (data.pos[1])
+    local posZ = (data.pos[3])
     local offsetX = unitbp.SizeX or 1
     local offsetZ = unitbp.SizeZ or 1
 
@@ -580,3 +580,11 @@ Callbacks.FlagShield = function(data, units)
 end
 
 Callbacks.WeaponPriorities = import('/lua/WeaponPriorities.lua').SetWeaponPriorities
+
+Callbacks.ToggleDebugChainByName = function (data, units)
+    LOG("ToggleDebugChainByName")
+end
+
+Callbacks.ToggleDebugMarkersByType = function (data, units)
+    import("/lua/sim/markerutilities.lua").ToggleDebugMarkersByType(data.Type)
+end

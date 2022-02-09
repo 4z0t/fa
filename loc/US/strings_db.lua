@@ -8056,10 +8056,17 @@ adaptive_lightning_key_2_help = "Normal lightning settings."
 adaptive_lightning_key_3 = "enabled - more"
 adaptive_lightning_key_3_help = "Lightning storm."
 
+enabled_sim_mods="The host enabled the following sim mods:"
+enabled_ui_mods="You have enabled the following UI mods:"
+enabled_no_mods="No mods enabled."
+
 aireplace_0001="AI Replacement"
 aireplace_0002="Toggle AI Replacement if a player disconnects."
 aireplace_0003="If a player disconnects and the ACU is still active, an AI will be created to take control of units that belonged to the player who disconnected."
 aireplace_0004="A disconnected player will cause the destruction of their units based on share conditions."
+
+chat_send_type_title="Default recipient: allies"
+chat_send_type_description="When enabled, enter sends messages to allies and holding shift + enter sends to all. When not enabled, the behavior is reversed."
 
 -- unranked lobby option
 lobui_0802="Unrate"
@@ -8068,3 +8075,6 @@ lobui_0804="No"
 lobui_0805="This game will be rated if all the criteria for a rated game are met."
 lobui_0806="Yes"
 lobui_0807="This game will not be rated."
+
+replay_id="Replay id"
+map_version="Map version"

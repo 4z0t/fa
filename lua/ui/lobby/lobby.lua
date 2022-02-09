@@ -2237,7 +2237,6 @@ local function UpdateGame()
         -- host to select presets (rather confusingly, one object represents both potential buttons)
         UIUtil.setEnabled(GUI.restrictedUnitsOrPresetsBtn, not isHost or notReady)
 
-        UIUtil.setEnabled(GUI.LargeMapPreview, notReady)
         UIUtil.setEnabled(GUI.factionSelector, notReady)
         if notReady then
             UpdateFactionSelector()
@@ -3094,6 +3093,7 @@ function CreateUI(maxPlayers)
     LayoutHelpers.DepthOverParent(GUI.mapView, GUI.mapPanel, -1)
 
     GUI.LargeMapPreview = UIUtil.CreateButtonWithDropshadow(GUI.mapPanel, '/BUTTON/zoom/', "")
+    LayoutHelpers.SetDimensions(GUI.LargeMapPreview, 30, 30)
     LayoutHelpers.AtRightIn(GUI.LargeMapPreview, GUI.mapPanel, -1)
     LayoutHelpers.AtBottomIn(GUI.LargeMapPreview, GUI.mapPanel, -1)
     LayoutHelpers.DepthOverParent(GUI.LargeMapPreview, GUI.mapPanel, 2)
@@ -3439,6 +3439,12 @@ function CreateUI(maxPlayers)
                 Tooltip.AddControlTooltip(line.bg, data.tooltip)
                 Tooltip.AddControlTooltip(line.bg2, data.valueTooltip)
             end
+
+            if data.manualTooltipTitle then 
+                Tooltip.AddControlTooltipManual(line.bg, data.manualTooltipTitle, data.manualTooltipDescription )
+                Tooltip.AddControlTooltipManual(line.bg2, data.manualTooltipTitle, data.manualTooltipDescription )
+            end
+
         end
 
         local optionsToUse
@@ -3925,13 +3931,54 @@ function RefreshOptionDisplayData(scenarioInfo)
             modStr = modNumUI..' UI Mod'
         end
     end
+
+    local description = "No mods enabled."
+
+    if modNum + modNumUI > 0 then 
+        description = ""
+
+        local descriptionSimMods = { "", }
+        if modNum > 0 then 
+            table.insert(descriptionSimMods, LOC("<LOC enabled_sim_mods>The host enabled the following sim mods:"))
+            for k, mod in Mods.GetGameMods() do 
+                table.insert(descriptionSimMods, "\r\n - " .. tostring(mod.name))
+            end
+
+            table.insert(descriptionSimMods, "\r\n")
+        end
+
+        local descriptionUIMods = { "", }
+        if modNumUI > 0 then 
+            table.insert(descriptionUIMods, LOC("<LOC enabled_ui_mods>You have enabled the following UI mods:"))
+            for k, mod in Mods.GetUiMods() do 
+                table.insert(descriptionUIMods, "\r\n - " .. tostring(mod.name))
+            end
+        end
+
+        descriptionSimMods = tostring(table.concat(descriptionSimMods))
+        descriptionUIMods = tostring(table.concat(descriptionUIMods))
+
+        if modNum > 0 and modNumUI > 0 then 
+            description = tostring(table.concat({descriptionSimMods, "\r\n", descriptionUIMods}))
+        else 
+            if modNum > 0 then 
+                description = descriptionSimMods
+            end 
+
+            if modNumUI > 0 then 
+                description = descriptionUIMods
+            end
+        end
+    end
+
     if modStr then
         local option = {
             text = modStr,
             value = LOC('<LOC lobby_0003>Check Mod Manager'),
             mod = true,
-            tooltip = 'Lobby_Mod_Option',
-            valueTooltip = 'Lobby_Mod_Option'
+            
+            manualTooltipTitle = 'Enabled mods',
+            manualTooltipDescription = description
         }
 
         table.insert(formattedOptions, option)
@@ -5553,6 +5600,10 @@ end
 function ShowTitleDialog()
     CreateInputDialog(GUI, "Game Title",
         function(self, text)
+            -- remove new lines from the text
+            text = text:gsub("\r", "")
+            text = text:gsub("\n", "")
+            
             SetGameOption("Title", text, true)
             SetGameTitleText(text)
         end, gameInfo.GameOptions.Title
