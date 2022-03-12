@@ -176,6 +176,9 @@ function SetLayout()
         LayoutHelpers.AtLeftTopIn(controls.statGroups[1].icon, controls.bg, 70, 60)
         LayoutHelpers.AtLeftTopIn(controls.statGroups[2].icon, controls.bg, 70, 80)
     end
+
+    LayoutHelpers.Above(controls.timer, controls.actionIcon)
+    LayoutHelpers.AtHorizontalCenterIn(controls.timer, controls.actionIcon)
 end
 
 function SetBG(controls)

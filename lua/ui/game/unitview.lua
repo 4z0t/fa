@@ -735,6 +735,23 @@ end
 function ShowROBox()
 end
 
+local timer
+local current_tick
+local prev_tick = 0
+local prev_progress = 0
+local current_progress = 0
+function UpdateTimer()
+    current_tick = GameTick()
+    local info = GetRolloverInfo()
+    if info then
+        current_progress = info.health / info.maxHealth
+        timer = math.ceil(((current_tick - prev_tick) / 10) *((1 - current_progress) / (current_progress - prev_progress)))
+        prev_progress = current_progress
+    end
+    prev_tick = current_tick
+
+end
+
 function SetLayout(layout)
     unitViewLayout.SetLayout()
 end
@@ -747,6 +764,7 @@ function SetupUnitViewLayout(mapGroup, orderControl)
 end
 
 function CreateUI()
+    GameMain.AddBeatFunction(UpdateTimer, true)
     controls.bg = Bitmap(controls.parent)
     controls.bracket = Bitmap(controls.bg)
     controls.name = UIUtil.CreateText(controls.bg, '', 14, UIUtil.bodyFont)
@@ -764,6 +782,7 @@ function CreateUI()
     controls.nextVet = UIUtil.CreateText(controls.vetBar, '', 10, UIUtil.bodyFont)
     controls.vetTitle = UIUtil.CreateText(controls.vetBar, 'Veterancy', 10, UIUtil.bodyFont)
 
+   
     controls.statGroups = {}
     for i = 1, table.getn(statFuncs) do
         controls.statGroups[i] = {}
@@ -777,6 +796,18 @@ function CreateUI()
     end
     controls.actionIcon = Bitmap(controls.bg)
     controls.actionText = UIUtil.CreateText(controls.bg, '', 14, UIUtil.bodyFont)
+
+    controls.timer = UIUtil.CreateText(controls.bg, '??:??', 12, UIUtil.bodyFont)
+    controls.timer:SetNeedsFrameUpdate(true)
+    controls.timer.OnFrame = function(self, delta)
+        self:SetText((function(eta)
+            if eta > 0 then
+                return string.format("%.2d:%.2d", eta / 60, math.mod(eta, 60))
+            else
+                return ''
+            end
+        end)(timer))
+    end
 
     controls.abilities = Group(controls.bg)
     controls.abilityText = {}
