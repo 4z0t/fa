@@ -169,16 +169,16 @@ WorldView = Class(moho.UIWorldView, Control) {
             self:CalcProjector()
         end
         local pr = self.Projector
-        local ht = math.abs((pr.tl[1] - x) * (pr.tr[3] - y) - (pr.tr[1] - x) * (pr.tl[3] - y)) / pr.c
+        local ht = ((pr.tl[1] - x) * (pr.tr[3] - y) - (pr.tr[1] - x) * (pr.tl[3] - y)) / pr.t
         --local hb = math.abs((pr.bl[1] - x) * (pr.br[3] - y) - (pr.br[1] - x) * (pr.bl[3] - y)) / pr.b
-        local hl = math.abs((pr.bl[1] - x) * (pr.tl[3] - y) - (pr.tl[1] - x) * (pr.bl[3] - y)) / pr.c
-        local lt = ht/pr.h*pr.c
-        local ws = hl*lt/ht
+        local hl = ((pr.bl[1] - x) * (pr.tl[3] - y) - (pr.tl[1] - x) * (pr.bl[3] - y)) / pr.c
+        -- local lt = ht/pr.h*pr.c
+        -- local ws = hl*lt/ht
         
-        local w = ws/((pr.t-pr.b)*(pr.h-ht)/pr.h+pr.b)
+        local w = (hl*pr.c)/(pr.t*pr.h - ht*pr.tb)
         --local w = pr.c * hl / (pr.w * ht)
         local h = ht / pr.h
-        return w * self.Width(), h * self.Height()
+        return w * pr.vw, h * pr.vh
     end,
 
     CalcProjector = function(self)
@@ -204,15 +204,19 @@ WorldView = Class(moho.UIWorldView, Control) {
     
         coords[1] = viewWidth
         coords[2] = viewHeight
+
         projector.br = UnProject(self, coords)
         projector.b = VDist2(projector.bl[1], projector.bl[3], projector.br[1], projector.br[3])
         projector.t = VDist2(projector.tl[1], projector.tl[3], projector.tr[1], projector.tr[3])
         projector.l = VDist2(projector.tl[1], projector.tl[3], projector.bl[1], projector.bl[3])
         projector.r = VDist2(projector.tr[1], projector.tr[3], projector.br[1], projector.br[3])
         projector.c = 0.5 * (projector.l + projector.r)
+        projector.tb = (projector.t - projector.b)
+        projector.vw = viewWidth 
+        projector.vh = viewHeight
     
         projector.h =
-            math.sqrt(projector.c * projector.c - 0.25 * (projector.b - projector.t) * (projector.b - projector.t))
+            math.sqrt(projector.c * projector.c - 0.25 *projector.tb * projector.tb)
         --projector.w = (projector.b + projector.t)
         --LOG(repr(projector))
     end,

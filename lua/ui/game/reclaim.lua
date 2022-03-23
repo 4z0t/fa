@@ -167,51 +167,6 @@ function CreateReclaimLabel(view)
     return label
 end
 
-local projector = {}
-function CalcProjector(view)
-    local viewWidth = view.Width()
-    local viewHeight = view.Height()
-
-    -- O(1): determine corners of view in world coordinates
-
-    local coords = {}
-
-    coords[1] = 0
-    coords[2] = 0
-    projector.tl = UnProject(view, coords)
-
-    coords[1] = viewWidth
-    coords[2] = 0
-    projector.tr = UnProject(view, coords)
-
-    coords[1] = 0
-    coords[2] = viewHeight
-    projector.bl = UnProject(view, coords)
-
-    coords[1] = viewWidth
-    coords[2] = viewHeight
-    projector.br = UnProject(view, coords)
-    projector.b = VDist2(projector.bl[1], projector.bl[3], projector.br[1], projector.br[3])
-    projector.t = VDist2(projector.tl[1], projector.tl[3], projector.tr[1], projector.tr[3])
-    projector.l = VDist2(projector.tl[1], projector.tl[3], projector.bl[1], projector.bl[3])
-    projector.r = VDist2(projector.tr[1], projector.tr[3], projector.br[1], projector.br[3])
-    projector.c = 0.5 * (projector.l + projector.r)
-
-    projector.h =
-        math.sqrt(projector.c * projector.c - 0.25 * (projector.b - projector.t) * (projector.b - projector.t))
-    projector.w = (projector.b + projector.t)
-    LOG(repr(projector))
-end
-
-function CalcPoint(x, y)
-    local pr = projector
-    local hb = math.abs((pr.bl[1] - x) * (pr.br[3] - y) - (pr.br[1] - x) * (pr.bl[3] - y)) / pr.b
-    local hl = math.abs((pr.bl[1] - x) * (pr.tl[3] - y) - (pr.tl[1] - x) * (pr.bl[3] - y)) / pr.c
-    local w = pr.c * hl / (pr.w * hb)
-    local h = hb / pr.h
-    return w, 1 - h
-end
-
 function UpdateLabels()
     local view = import('/lua/ui/game/worldview.lua').viewLeft -- Left screen's camera
     -- CalcProjector(view)
