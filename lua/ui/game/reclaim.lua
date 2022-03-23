@@ -167,6 +167,7 @@ function CreateReclaimLabel(view)
     return label
 end
 
+
 function UpdateLabels()
     local view = import('/lua/ui/game/worldview.lua').viewLeft -- Left screen's camera
     -- CalcProjector(view)

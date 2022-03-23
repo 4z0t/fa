@@ -175,7 +175,7 @@ WorldView = Class(moho.UIWorldView, Control) {
         -- local lt = ht/pr.h*pr.c
         -- local ws = hl*lt/ht
         
-        local w = (hl*pr.c)/(pr.t*pr.h - ht*pr.tb)
+        local w = (hl*pr.c)/(pr.th - ht*pr.tb)
         --local w = pr.c * hl / (pr.w * ht)
         local h = ht / pr.h
         return w * pr.vw, h * pr.vh
@@ -185,6 +185,7 @@ WorldView = Class(moho.UIWorldView, Control) {
         local projector = self.Projector
         local viewWidth = self.Width()
         local viewHeight = self.Height()
+        local angleCos =  math.sin(GetCamera(self._cameraName):SaveSettings().Pitch)
     
         -- O(1): determine corners of view in world coordinates
     
@@ -213,10 +214,12 @@ WorldView = Class(moho.UIWorldView, Control) {
         projector.c = 0.5 * (projector.l + projector.r)
         projector.tb = (projector.t - projector.b)
         projector.vw = viewWidth 
-        projector.vh = viewHeight
+        projector.vh = viewHeight *angleCos
+        --projector.ac = angleCos
     
         projector.h =
             math.sqrt(projector.c * projector.c - 0.25 *projector.tb * projector.tb)
+        projector.th = projector.h*projector.t
         --projector.w = (projector.b + projector.t)
         --LOG(repr(projector))
     end,
