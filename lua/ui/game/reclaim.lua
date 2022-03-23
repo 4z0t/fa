@@ -44,8 +44,8 @@ function SetPlayableArea(rect)
     local newReclaim = {}
     local newOutsidePlayableAreaReclaim = {}
     local ReclaimLists = {Reclaim, OutsidePlayableAreaReclaim}
-    for _,reclaimList in ReclaimLists do
-        for id,r in reclaimList do
+    for _, reclaimList in ReclaimLists do
+        for id, r in reclaimList do
             r.inPlayableArea = InPlayableArea(r.position)
             if r.inPlayableArea then
                 newReclaim[id] = r
@@ -79,7 +79,8 @@ end
 
 function InPlayableArea(pos)
     if PlayableArea then
-        return not (pos[1] < PlayableArea[1] or pos[3] < PlayableArea[2] or pos[1] > PlayableArea[3] or pos[3] > PlayableArea[4])
+        return not (pos[1] < PlayableArea[1] or pos[3] < PlayableArea[2] or pos[1] > PlayableArea[3] or pos[3] >
+                   PlayableArea[4])
     end
     return true
 end
@@ -108,7 +109,7 @@ local WorldLabel = Class(Group) {
         self:Update()
     end
 }
-
+local once = false
 -- Creates an empty reclaim label
 function CreateReclaimLabel(view)
     local label = WorldLabel(view, Vector(0, 0, 0))
@@ -133,8 +134,19 @@ function CreateReclaimLabel(view)
     label.Update = function(self)
         local view = self.parent.view
         local proj = view:Project(self.position)
-        LayoutHelpers.AtLeftTopIn(self, self.parent, (proj.x - self.Width() / 2) / LayoutHelpers.GetPixelScaleFactor(), (proj.y - self.Height() / 2 + 1) / LayoutHelpers.GetPixelScaleFactor())
-        self.proj = {x=proj.x, y=proj.y }
+        -- LOG('real')
+        -- LOG(proj.x)
+        -- LOG(proj.y)
+        local x, y = view:CalcPoint(self.position[1], self.position[3])
+        -- LOG('calc')
+        -- LOG(x)
+        -- LOG(y)
+        LayoutHelpers.AtLeftTopIn(self, self.parent, (x - self.Width() / 2) / LayoutHelpers.GetPixelScaleFactor(),
+            (y - self.Height() / 2 + 1) / LayoutHelpers.GetPixelScaleFactor())
+        self.proj = {
+            x = x,
+            y = y
+        }
 
     end
 
@@ -155,9 +167,54 @@ function CreateReclaimLabel(view)
     return label
 end
 
+local projector = {}
+function CalcProjector(view)
+    local viewWidth = view.Width()
+    local viewHeight = view.Height()
+
+    -- O(1): determine corners of view in world coordinates
+
+    local coords = {}
+
+    coords[1] = 0
+    coords[2] = 0
+    projector.tl = UnProject(view, coords)
+
+    coords[1] = viewWidth
+    coords[2] = 0
+    projector.tr = UnProject(view, coords)
+
+    coords[1] = 0
+    coords[2] = viewHeight
+    projector.bl = UnProject(view, coords)
+
+    coords[1] = viewWidth
+    coords[2] = viewHeight
+    projector.br = UnProject(view, coords)
+    projector.b = VDist2(projector.bl[1], projector.bl[3], projector.br[1], projector.br[3])
+    projector.t = VDist2(projector.tl[1], projector.tl[3], projector.tr[1], projector.tr[3])
+    projector.l = VDist2(projector.tl[1], projector.tl[3], projector.bl[1], projector.bl[3])
+    projector.r = VDist2(projector.tr[1], projector.tr[3], projector.br[1], projector.br[3])
+    projector.c = 0.5 * (projector.l + projector.r)
+
+    projector.h =
+        math.sqrt(projector.c * projector.c - 0.25 * (projector.b - projector.t) * (projector.b - projector.t))
+    projector.w = (projector.b + projector.t)
+    LOG(repr(projector))
+end
+
+function CalcPoint(x, y)
+    local pr = projector
+    local hb = math.abs((pr.bl[1] - x) * (pr.br[3] - y) - (pr.br[1] - x) * (pr.bl[3] - y)) / pr.b
+    local hl = math.abs((pr.bl[1] - x) * (pr.tl[3] - y) - (pr.tl[1] - x) * (pr.bl[3] - y)) / pr.c
+    local w = pr.c * hl / (pr.w * hb)
+    local h = hb / pr.h
+    return w, 1 - h
+end
+
 function UpdateLabels()
     local view = import('/lua/ui/game/worldview.lua').viewLeft -- Left screen's camera
-
+    -- CalcProjector(view)
     local onScreenReclaimIndex = 1
     local onScreenReclaims = {}
 
@@ -170,7 +227,9 @@ function UpdateLabels()
         end
     end
 
-    table.sort(onScreenReclaims, function(a, b) return a.mass > b.mass end)
+    table.sort(onScreenReclaims, function(a, b)
+        return a.mass > b.mass
+    end)
 
     -- Create/Update as many reclaim labels as we need
     local labelIndex = 1
@@ -241,16 +300,12 @@ function ShowReclaimThread(watch_key)
         if not IsDestroyed(camera) then
             local zoom = camera:GetZoom()
             local position = camera:GetFocusPosition()
-            if ReclaimChanged
-                or view.NewViewing
-                or OldZoom ~= zoom
-                or OldPosition[1] ~= position[1]
-                or OldPosition[2] ~= position[2]
-                or OldPosition[3] ~= position[3] then
-                    UpdateLabels()
-                    OldZoom = zoom
-                    OldPosition = position
-                    ReclaimChanged = false
+            if ReclaimChanged or view.NewViewing or OldZoom ~= zoom or OldPosition[1] ~= position[1] or OldPosition[2] ~=
+                position[2] or OldPosition[3] ~= position[3] then
+                UpdateLabels()
+                OldZoom = zoom
+                OldPosition = position
+                ReclaimChanged = false
             end
 
             view.NewViewing = false
@@ -273,7 +328,9 @@ end
 local CommandGraphActive = false
 function OnCommandGraphShow(bool)
     local view = import('/lua/ui/game/worldview.lua').viewLeft
-    if view.ShowingReclaim and not CommandGraphActive then return end -- if on by toggle key
+    if view.ShowingReclaim and not CommandGraphActive then
+        return
+    end -- if on by toggle key
 
     CommandGraphActive = bool
     if CommandGraphActive then

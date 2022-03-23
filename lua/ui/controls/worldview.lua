@@ -1,9 +1,9 @@
-#*****************************************************************************
-#* File: lua/modules/ui/controls/worldview.lua
-#* Summary: World view control
-#*
-#* Copyright © 2008 Gas Powered Games, Inc.  All rights reserved.
-#*****************************************************************************
+-- #*****************************************************************************
+-- #* File: lua/modules/ui/controls/worldview.lua
+-- #* Summary: World view control
+-- #*
+-- #* Copyright © 2008 Gas Powered Games, Inc.  All rights reserved.
+-- #*****************************************************************************
 
 local UIUtil = import('/lua/ui/uiutil.lua')
 local LayoutHelpers = import('/lua/maui/layouthelpers.lua')
@@ -155,6 +155,67 @@ WorldView = Class(moho.UIWorldView, Control) {
     _pingAnimationThreads = {},
     Decals = {},
     AutoBuild = false,
+    Projector = {},
+    updateProj = false,
+
+    OnFrame = function(self)
+        updateProj = false
+    end,
+
+    CalcPoint = function(self, x ,y)
+        if not updateProj then
+            self:SetNeedsFrameUpdate(true)
+            updateProj = true
+            self:CalcProjector()
+        end
+        local pr = self.Projector
+        local ht = math.abs((pr.tl[1] - x) * (pr.tr[3] - y) - (pr.tr[1] - x) * (pr.tl[3] - y)) / pr.c
+        --local hb = math.abs((pr.bl[1] - x) * (pr.br[3] - y) - (pr.br[1] - x) * (pr.bl[3] - y)) / pr.b
+        local hl = math.abs((pr.bl[1] - x) * (pr.tl[3] - y) - (pr.tl[1] - x) * (pr.bl[3] - y)) / pr.c
+        local lt = ht/pr.h*pr.c
+        local ws = hl*lt/ht
+        
+        local w = ws/((pr.t-pr.b)*(pr.h-ht)/pr.h+pr.b)
+        --local w = pr.c * hl / (pr.w * ht)
+        local h = ht / pr.h
+        return w * self.Width(), h * self.Height()
+    end,
+
+    CalcProjector = function(self)
+        local projector = self.Projector
+        local viewWidth = self.Width()
+        local viewHeight = self.Height()
+    
+        -- O(1): determine corners of view in world coordinates
+    
+        local coords = {}
+    
+        coords[1] = 0
+        coords[2] = 0
+        projector.tl = UnProject(self, coords)
+    
+        coords[1] = viewWidth
+        coords[2] = 0
+        projector.tr = UnProject(self, coords)
+    
+        coords[1] = 0
+        coords[2] = viewHeight
+        projector.bl = UnProject(self, coords)
+    
+        coords[1] = viewWidth
+        coords[2] = viewHeight
+        projector.br = UnProject(self, coords)
+        projector.b = VDist2(projector.bl[1], projector.bl[3], projector.br[1], projector.br[3])
+        projector.t = VDist2(projector.tl[1], projector.tl[3], projector.tr[1], projector.tr[3])
+        projector.l = VDist2(projector.tl[1], projector.tl[3], projector.bl[1], projector.bl[3])
+        projector.r = VDist2(projector.tr[1], projector.tr[3], projector.br[1], projector.br[3])
+        projector.c = 0.5 * (projector.l + projector.r)
+    
+        projector.h =
+            math.sqrt(projector.c * projector.c - 0.25 * (projector.b - projector.t) * (projector.b - projector.t))
+        --projector.w = (projector.b + projector.t)
+        --LOG(repr(projector))
+    end,
 
     HandleEvent = function(self, event)
         if self.EventRedirect then
