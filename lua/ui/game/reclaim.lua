@@ -220,11 +220,11 @@ function UpdateLabels()
 
     -- One might be tempted to use a binary insert; however, tests have shown that it takes about 140x more time
     for _, r in Reclaim do
-        r.onScreen = OnScreen(view, r.position)
-        if r.onScreen and r.mass >= MinAmount then
+        -- r.onScreen = OnScreen(view, r.position)
+        -- if r.onScreen and r.mass >= MinAmount then
             onScreenReclaims[onScreenReclaimIndex] = r
             onScreenReclaimIndex = onScreenReclaimIndex + 1
-        end
+        --end
     end
 
     table.sort(onScreenReclaims, function(a, b)
