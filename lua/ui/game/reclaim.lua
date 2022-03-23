@@ -133,7 +133,7 @@ function CreateReclaimLabel(view)
 
     label.Update = function(self)
         local view = self.parent.view
-        local proj = view:Project(self.position)
+        --local proj = view:Project(self.position)
         -- LOG('real')
         -- LOG(proj.x)
         -- LOG(proj.y)
@@ -143,10 +143,10 @@ function CreateReclaimLabel(view)
         -- LOG(y)
         LayoutHelpers.AtLeftTopIn(self, self.parent, (x - self.Width() / 2) / LayoutHelpers.GetPixelScaleFactor(),
             (y - self.Height() / 2 + 1) / LayoutHelpers.GetPixelScaleFactor())
-        self.proj = {
-            x = x,
-            y = y
-        }
+        -- self.proj = {
+        --     x = x,
+        --     y = y
+        -- }
 
     end
 
