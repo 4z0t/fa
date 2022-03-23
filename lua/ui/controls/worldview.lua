@@ -171,11 +171,11 @@ WorldView = Class(moho.UIWorldView, Control) {
         local pr = self.Projector
         local ht = ((pr.tl[1] - x) * (pr.tr[3] - y) - (pr.tr[1] - x) * (pr.tl[3] - y)) / pr.t
         --local hb = math.abs((pr.bl[1] - x) * (pr.br[3] - y) - (pr.br[1] - x) * (pr.bl[3] - y)) / pr.b
-        local hl = ((pr.bl[1] - x) * (pr.tl[3] - y) - (pr.tl[1] - x) * (pr.bl[3] - y)) / pr.c
+        local hl = (pr.bl[1] - x) * (pr.tl[3] - y) - (pr.tl[1] - x) * (pr.bl[3] - y)
         -- local lt = ht/pr.h*pr.c
         -- local ws = hl*lt/ht
         
-        local w = (hl*pr.c)/(pr.th - ht*pr.tb)
+        local w = hl/(pr.th - ht*pr.tb)
         --local w = pr.c * hl / (pr.w * ht)
         local h = ht / pr.h
         return w * pr.vw, h * pr.vh
