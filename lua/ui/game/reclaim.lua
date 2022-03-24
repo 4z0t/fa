@@ -98,16 +98,16 @@ local WorldLabel = Class(Group) {
         self:SetNeedsFrameUpdate(true)
     end,
 
-    Update = function(self)
+    Update = function(self, x, y)
     end,
 
     SetPosition = function(self, position)
         self.position = position or {}
-    end,
-
-    OnFrame = function(self, delta)
-        self:Update()
     end
+
+    -- OnFrame = function(self, delta)
+    --     self:Update()
+    -- end
 }
 local once = false
 -- Creates an empty reclaim label
@@ -125,28 +125,15 @@ function CreateReclaimLabel(view)
     label.text:SetDropShadow(true)
     LayoutHelpers.AtLeftIn(label.text, label, 16)
     LayoutHelpers.AtVerticalCenterIn(label.text, label)
-
+    label:SetNeedsFrameUpdate(false)
     label:DisableHitTest(true)
-    label.OnHide = function(self, hidden)
-        self:SetNeedsFrameUpdate(not hidden)
-    end
+    -- label.OnHide = function(self, hidden)
+    --     self:SetNeedsFrameUpdate(not hidden)
+    -- end
 
-    label.Update = function(self)
-        local view = self.parent.view
-        --local proj = view:Project(self.position)
-        -- LOG('real')
-        -- LOG(proj.x)
-        -- LOG(proj.y)
-        local x, y = view:CalcPoint(self.position[1], self.position[3])
-        -- LOG('calc')
-        -- LOG(x)
-        -- LOG(y)
+    label.Update = function(self, x, y)
         LayoutHelpers.AtLeftTopIn(self, self.parent, (x - self.Width() / 2) / LayoutHelpers.GetPixelScaleFactor(),
             (y - self.Height() / 2 + 1) / LayoutHelpers.GetPixelScaleFactor())
-        -- self.proj = {
-        --     x = x,
-        --     y = y
-        -- }
 
     end
 
@@ -162,43 +149,22 @@ function CreateReclaimLabel(view)
         end
     end
 
-    label:Update()
-
     return label
 end
-
 
 function UpdateLabels()
     local view = import('/lua/ui/game/worldview.lua').viewLeft -- Left screen's camera
     -- CalcProjector(view)
     local onScreenReclaimIndex = 1
-    local onScreenReclaims = {}
-
-    -- One might be tempted to use a binary insert; however, tests have shown that it takes about 140x more time
-    for _, r in Reclaim do
-        -- r.onScreen = OnScreen(view, r.position)
-        -- if r.onScreen and r.mass >= MinAmount then
-            onScreenReclaims[onScreenReclaimIndex] = r
-            onScreenReclaimIndex = onScreenReclaimIndex + 1
-        --end
-    end
-
-    table.sort(onScreenReclaims, function(a, b)
-        return a.mass > b.mass
-    end)
-
     -- Create/Update as many reclaim labels as we need
     local labelIndex = 1
-    for _, r in onScreenReclaims do
+    for _, r in Reclaim do
         if labelIndex > MaxLabels then
             break
         end
         local label = LabelPool[labelIndex]
-        if label and IsDestroyed(label) then
-            label = nil
-        end
-        if not label then
-            label = CreateReclaimLabel(view.ReclaimGroup, r)
+        if IsDestroyed(label) then
+            label = CreateReclaimLabel(view.ReclaimGroup)
             LabelPool[labelIndex] = label
         end
 
@@ -229,16 +195,99 @@ function ShowReclaim(show)
     end
 end
 
-function InitReclaimGroup(view)
-    if not view.ReclaimGroup or IsDestroyed(view.ReclaimGroup) then
-        local rgroup = Group(view)
-        rgroup.view = view
-        rgroup:DisableHitTest()
-        LayoutHelpers.FillParent(rgroup, view)
-        rgroup:Show()
+local UnProject = UnProject
+local VDist2 = VDist2
+local MathSqrt = math.sqrt
 
-        view.ReclaimGroup = rgroup
-        rgroup:SetNeedsFrameUpdate(true)
+function InitReclaimGroup(view)
+    if IsDestroyed(view.ReclaimGroup) then
+        local group = Group(view)
+        group.view = view
+        group:DisableHitTest()
+        LayoutHelpers.FillParent(group, view)
+        group:Show()
+
+        view.ReclaimGroup = group
+        group.Projector = {}
+        group.CalcProjector = function(self)
+            local projector = self.Projector
+            local viewWidth = self.view.Width()
+            local viewHeight = self.view.Height()
+            --local angleCos = math.sin(GetCamera(self.view._cameraName):SaveSettings().Pitch)
+
+            -- O(1): determine corners of view in world coordinates
+
+            local coords = {}
+
+            coords[1] = 0
+            coords[2] = 0
+            projector.tl = UnProject(self.view, coords)
+
+            coords[1] = viewWidth
+            coords[2] = 0
+            projector.tr = UnProject(self.view, coords)
+
+            coords[1] = 0
+            coords[2] = viewHeight
+            projector.bl = UnProject(self.view, coords)
+
+            coords[1] = viewWidth
+            coords[2] = viewHeight
+
+            projector.br = UnProject(self.view, coords)
+            projector.b = VDist2(projector.bl[1], projector.bl[3], projector.br[1], projector.br[3])
+            projector.t = VDist2(projector.tl[1], projector.tl[3], projector.tr[1], projector.tr[3])
+            projector.l = VDist2(projector.tl[1], projector.tl[3], projector.bl[1], projector.bl[3])
+            projector.r = VDist2(projector.tr[1], projector.tr[3], projector.br[1], projector.br[3])
+            projector.c = 0.5 * (projector.l + projector.r)
+            projector.tb = (projector.t - projector.b)
+            projector.vw = viewWidth
+            projector.vh = viewHeight 
+            --projector.vh = viewHeight * angleCos
+
+            projector.h = MathSqrt(projector.c * projector.c - 0.25 * projector.tb * projector.tb)
+            projector.th = projector.h * projector.t
+            projector.bh = projector.h * projector.b
+            -- projector.w = (projector.b + projector.t)
+            -- LOG(repr(projector))
+        end
+        group:SetNeedsFrameUpdate(true)
+        group.OnFrame = function(self, delta)
+            if self.view.ShowingReclaim then
+                self:CalcProjector()
+
+                local pr = self.Projector
+                local tlx = pr.tl[1]
+                local tly = pr.tl[3]
+                -- local trx = pr.tr[1]
+                -- local try = pr.tr[3]
+                local blx = pr.bl[1]
+                local bly = pr.bl[3]
+                local brx = pr.br[1]
+                local bry = pr.br[3]
+                local x, y
+                local hl
+                local hb
+                local w
+                local h
+                for _, label in LabelPool do
+                    x = label.position[1]
+                    y = label.position[3]
+                    hb = -((blx - x) * (bry - y) - (brx - x) * (bly - y)) / pr.b
+                    --ht = ((tlx - x) * (try - y) - (trx - x) * (tly - y)) / pr.t
+                    -- local hb = math.abs((pr.bl[1] - x) * (pr.br[3] - y) - (pr.br[1] - x) * (pr.bl[3] - y)) / pr.b
+                    hl = (blx - x) * (tly - y) - (tlx - x) * (bly - y)
+                    -- local lt = ht/pr.h*pr.c
+                    -- local ws = hl*lt/ht
+
+                    w = hl / (pr.bh + hb * pr.tb)
+                    -- local w = pr.c * hl / (pr.w * ht)
+                    h = 1 - hb / pr.h
+                    label:Update(w * pr.vw, h * pr.vh)
+                end
+
+            end
+        end
     else
         view.ReclaimGroup:Show()
     end
