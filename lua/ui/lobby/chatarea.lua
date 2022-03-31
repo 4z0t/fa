@@ -54,8 +54,7 @@ ChatArea = Class(Group) {
     PostMessage = function(self, messageText, authorName, messageStyle, authorStyle)
 
         messageStyle = table.merged(defaultStyle.message, messageStyle or {})
-        authorStyle = table.merged(defaultStyle.author, authorStyle or {})
-
+        --authorStyle = table.merged(defaultStyle.author, authorStyle or {})
         if self.ChatHistoryActive then
             local entry = {
                 authorName = authorName,
@@ -119,7 +118,7 @@ ChatArea = Class(Group) {
         linesGroup.Lines[index] = self:CreateLine(linesGroup)
         local previous = linesGroup.Lines[index]
         LayoutHelpers.AtLeftTopIn(previous, linesGroup, self.Style.padding.left)
-        while previous.Bottom() + previous.Height()  < linesGroup.Bottom() do
+        while previous.Bottom() + previous.Height() < linesGroup.Bottom() do
             index = index + 1
             linesGroup.Lines[index] = self:CreateLine(linesGroup)
             LayoutHelpers.Below(linesGroup.Lines[index], previous, 2)
@@ -231,7 +230,7 @@ ChatArea = Class(Group) {
     AdvanceFunction = function(self, str, strStyle)
         local dummy = Text.Text(self.Parent)
         dummy:Hide()
-        dummy:SetFont(strStyle.fontFamily(), self.Style.fontSize())
+        dummy:SetFont(self.Style.message.fontFamily(), self.Style.fontSize())
         dummy:SetText(str)
         local width = dummy:Width()
         dummy:Destroy()

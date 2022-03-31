@@ -32,6 +32,7 @@ local FactionData = import('/lua/factions.lua')
 local Text = import('/lua/maui/text.lua').Text
 local TextArea = import('/lua/ui/controls/textarea.lua').TextArea
 local Border = import('/lua/ui/controls/border.lua').Border
+local LazyVar = import('/lua/lazyvar.lua')
 
 local utils = import('/lua/system/utils.lua')
 
@@ -2498,6 +2499,8 @@ function GetAvailableColor()
     WARN('Error: No available colors found.')
 end
 
+local playersColors = {}
+
 --- This function is retarded.
 -- Unfortunately, we're stuck with it.
 -- The game requires both ArmyColor and PlayerColor be set. We don't want to have to write two fields
@@ -2506,6 +2509,11 @@ end
 function SetPlayerColor(playerData, newColor)
     playerData.ArmyColor = newColor
     playerData.PlayerColor = newColor
+    if playersColors[playerData.PlayerName] then
+        playersColors[playerData.PlayerName]:Set(gameColors.PlayerColors[newColor])
+    else
+        playersColors[playerData.PlayerName] = LazyVar.Create(gameColors.PlayerColors[newColor])
+    end
 end
 
 function autoMap()
@@ -4269,8 +4277,12 @@ function AddChatText(text, playerID, scrollToBottom)
         end
     end
     local name = FindNameForID(playerID)
-
-    GUI.chatDisplay:PostMessage(text, name, {fontColor = textColor}, {fontColor = nameColor, fontFamily = nameFont})
+    local authorColor
+    if name then 
+        playersColors[name] = playersColors[name] or LazyVar.Create(nameColor)
+        authorColor = playersColors[name]
+    end
+    GUI.chatDisplay:PostMessage(text, name, {fontColor = textColor}, {fontColor = authorColor, fontFamily = nameFont})
     if scrolledToBottom then
        GUI.chatPanel:ScrollToBottom()
     else
@@ -5184,6 +5196,11 @@ function InitLobbyComm(protocol, localPort, desiredPlayerName, localPlayerUID, n
         end
 
         if IsPlayer(peerID) then
+            local name = FindNameForID(peerID)
+            LOG(name)
+            if name and playersColors[name] then
+                playersColors[name]:Set('ff888888')
+            end
             local slot = FindSlotForID(peerID)
             if slot and lobbyComm:IsHost() then
                 if HasCommandLineArg('/gpgnet') then
