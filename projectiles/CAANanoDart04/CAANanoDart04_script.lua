@@ -9,7 +9,7 @@
 --**  Copyright © 2007 Gas Powered Games, Inc.  All rights reserved.
 --****************************************************************************
 
-import("/lua/utilities.lua")
+import("/lua/utilities.lua",true)
 CAANanoDartProjectile = import("/lua/cybranprojectiles.lua").CAANanoDartProjectile02
 
 CAANanoDart04 = Class(CAANanoDartProjectile) {

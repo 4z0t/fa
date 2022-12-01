@@ -29,7 +29,7 @@ InitialRegistration = true
 
 -- load buff blueprints
 doscript '/lua/system/BuffBlueprints.lua'
-import("/lua/sim/buffdefinitions.lua")
+import("/lua/sim/buffdefinitions.lua", true)
 
 -- load AI builder systems
 doscript '/lua/system/GlobalPlatoonTemplate.lua'

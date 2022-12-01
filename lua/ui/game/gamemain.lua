@@ -152,19 +152,19 @@ end
 function CreateUI(isReplay)
     -- overwrite some globals for performance / safety
 
-    import("/lua/ui/override/exit.lua")
-    import("/lua/ui/override/armiestable.lua")
-    import("/lua/ui/override/sessionclients.lua")
+    import("/lua/ui/override/exit.lua",true)
+    import("/lua/ui/override/armiestable.lua",true)
+    import("/lua/ui/override/sessionclients.lua",true)
 
     -- start long-running threads
 
-    import("/lua/system/performance.lua")
-    import("/lua/ui/game/cursor/depth.lua")
-    import("/lua/ui/game/cursor/hover.lua")
+    import("/lua/system/performance.lua",true)
+    import("/lua/ui/game/cursor/depth.lua",true)
+    import("/lua/ui/game/cursor/hover.lua",true)
 
     -- casting tools 
 
-    import("/lua/ui/game/casting/mouse.lua")
+    import("/lua/ui/game/casting/mouse.lua",true)
 
     -- overwrite some globals for performance / safety
 

@@ -263,7 +263,7 @@ end
 function BeginSession()
 
     -- make sure the hook happens before scripts start working
-    import("/lua/sim/markerutilities.lua")
+    import("/lua/sim/markerutilities.lua", true)
 
     ScenarioUtils.CreateProps()
     ScenarioUtils.CreateResources()
@@ -359,7 +359,7 @@ function BeginSession()
     import("/lua/sim/recall.lua").init()
 
     --start watching for victory conditions
-    import("/lua/sim/matchstate.lua")
+    import("/lua/sim/matchstate.lua",true)
 
     if ScenarioInfo.Options.CommonArmy == 'Union' then
         local humanIndex = 0

@@ -15,7 +15,7 @@
 ---| 'VeterancyRegen4'
 ---| 'VeterancyRegen5'
 
-import("/lua/sim/adjacencybuffs.lua")
+import("/lua/sim/adjacencybuffs.lua", true)
 import("/lua/sim/cheatbuffs.lua") -- Buffs for AI Cheating
 
 -- VETERANCY BUFFS - UNIT MAX HEALTH ONLY

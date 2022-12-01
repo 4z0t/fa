@@ -985,7 +985,7 @@ function Generate()
     ------------------
 
     -- allows debugging tools to function
-    import("/lua/sim/navdebug.lua")
+    import("/lua/sim/navdebug.lua", true)
 
     -- pass data to sync
     Sync.NavLayerData = NavLayerData
