@@ -46,6 +46,11 @@ local informDevOfLoad = false
     local moduleinfo = module.__moduleinfo
     local name = moduleinfo.name
 
+    -- inform the devs that we're loading this module for the first time
+    if informDevOfLoad then
+        SPEW("Loading module '", name, "'")
+    end
+
      -- make any old data available to the new one while it reloads
      local oldMod = oldModules[name]
      if oldMod then
@@ -200,10 +205,7 @@ function import(name, doNow)
         return existing
     end
 
-    -- inform the devs that we're loading this module for the first time
-    if informDevOfLoad then
-        SPEW("Loading module '", name, "'")
-    end
+
 
     ---@type ModuleInfo
     local moduleinfo = {
@@ -232,7 +234,6 @@ function import(name, doNow)
         end,
     }
 
-    -- set the meta table so that if it can't find an index it searches in _G
     setmetatable(module, __lazyimport_metatable)
 
     if doNow then
