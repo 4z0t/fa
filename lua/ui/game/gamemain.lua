@@ -590,9 +590,7 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
         newSelection, changed = DeselectSelens(newSelection)
 
         if changed then
-            ForkThread(function()
-                SelectUnits(newSelection)
-            end)
+            ForkThread(SelectUnits, newSelection)
             return
         end
 
@@ -649,17 +647,12 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
     end
 
     if newSelection then
-        local n = table.getn(newSelection)
-
         -- if something died in selection, restore command mode
-        if n > 0 and not table.empty(removed) and table.empty(added) then
+        if not table.empty(newSelection) and not table.empty(removed) and table.empty(added) then
             local CM = import("/lua/ui/game/commandmode.lua")
             local mode, data = unpack(CM.GetCommandMode())
-
             if mode then
-                ForkThread(function()
-                    CM.StartCommandMode(mode, data)
-                end)
+                ForkThread(CM.StartCommandMode, mode, data)
             end
         end
     end
