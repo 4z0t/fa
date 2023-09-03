@@ -85,7 +85,7 @@ local WorldLabel = ClassUI(Group) {
         LayoutHelpers.AtVerticalCenterIn(self.text, self)
 
         self:DisableHitTest(true)
-        self:SetNeedsFrameUpdate(true)
+        --self:SetNeedsFrameUpdate(true)
     end,
 
     --- Returns the color of the reclaim label
@@ -105,7 +105,7 @@ local WorldLabel = ClassUI(Group) {
         -- small end of the scale using a proportional quadratic function up to a threshold. This
         -- also ends up flattening it into something more useful, rather than a quarter of the
         -- function being between 0 and 5.
-        -- 
+        --
         -- Thus, we have three parameters to consider for our function
         --    base: how quickly the function scales a mass value to hue
         --    cutoff: when the function meets 1
@@ -118,7 +118,7 @@ local WorldLabel = ClassUI(Group) {
         --             1 = nominal(cutoff)
         --             1 = log_{base}(cutoff / scale + 1)
         --         scale = cutoff / (base - 1)
-        -- 
+        --
         -- The approximating function is `a x^2 + b x` where we choose `a` and `b` such that the
         -- slopes of the approximating function and the nominal function are smooth up to the first
         -- derivative at the threshold point:
@@ -178,7 +178,7 @@ local WorldLabel = ClassUI(Group) {
         if scaling == 0 then
             return 10
         end
-        
+
         local minSize = 10
         local maxSize = 30
         local mass = reclaimData.mass
@@ -197,8 +197,13 @@ local WorldLabel = ClassUI(Group) {
         local proj = view:Project(self.position)
         self.Left:SetValue(proj.x - 0.5 * self.Width())
         self.Top:SetValue(proj.y - 0.5 * self.Height() + 1)
-    end,    
-    
+    end,
+
+    SetScreenPos = function(self, pos)
+        self.Left:SetValue(pos[1] - 0.5 * self.Width())
+        self.Top:SetValue(pos[2] - 0.5 * self.Height() + 1)
+    end,
+
     --- Updates the reclaim that this label displays
     ---@param self WorldLabel
     ---@param r UIReclaimDataCombined
@@ -220,7 +225,7 @@ local WorldLabel = ClassUI(Group) {
         end
 
         self.position = r.position
-        self:ProjectToScreen()
+        --self:ProjectToScreen()
         if r.mass ~= self.oldMass then
             self:UpdateLabel(r)
             self.oldMass = r.mass
@@ -357,7 +362,6 @@ local function SumReclaim(r1, r2)
     return r1
 end
 
-
 ---@param reclaim UIReclaimDataPoint[]
 ---@return boolean | number         # Returns the number of labels, or false if the zoom threshold is
 local function _CopyReclaim(reclaim)
@@ -451,111 +455,112 @@ local function ContainsWholeMap(minX, minY, maxX, maxY)
 end
 
 function UpdateLabels()
-    if table.getn(Reclaim) < totalReclaimData then
-        totalReclaimData = 0
-        reclaimDataPool = {}
-    end
+    -- if table.getn(Reclaim) < totalReclaimData then
+    --     totalReclaimData = 0
+    --     reclaimDataPool = {}
+    -- end
 
     local view = import("/lua/ui/game/worldview.lua").viewLeft -- Left screen's camera
-    local onScreenReclaimIndex = 1
-    local onScreenReclaims = {}
+    -- local onScreenReclaimIndex = 1
+    -- local onScreenReclaims = {}
 
-    local tl = UnProject(view, Vector2(view.Left(), view.Top()))
-    local tr = UnProject(view, Vector2(view.Right(), view.Top()))
-    local br = UnProject(view, Vector2(view.Right(), view.Bottom()))
-    local bl = UnProject(view, Vector2(view.Left(), view.Bottom()))
+    -- local tl = UnProject(view, Vector2(view.Left(), view.Top()))
+    -- local tr = UnProject(view, Vector2(view.Right(), view.Top()))
+    -- local br = UnProject(view, Vector2(view.Right(), view.Bottom()))
+    -- local bl = UnProject(view, Vector2(view.Left(), view.Bottom()))
 
-    local x1 = tl[1]
-    local y1 = tl[3]
-    local x2 = tr[1]
-    local y2 = tr[3]
-    local x3 = br[1]
-    local y3 = br[3]
-    local x4 = bl[1]
-    local y4 = bl[3]
+    -- local x1 = tl[1]
+    -- local y1 = tl[3]
+    -- local x2 = tr[1]
+    -- local y2 = tr[3]
+    -- local x3 = br[1]
+    -- local y3 = br[3]
+    -- local x4 = bl[1]
+    -- local y4 = bl[3]
 
-    local minX = MathMin(x1, x2, x3, x4)
-    local maxX = MathMax(x1, x2, x3, x4)
-    local minY = MathMin(y1, y2, y3, y4)
-    local maxY = MathMax(y1, y2, y3, y4)
+    -- local minX = MathMin(x1, x2, x3, x4)
+    -- local maxX = MathMax(x1, x2, x3, x4)
+    -- local minY = MathMin(y1, y2, y3, y4)
+    -- local maxY = MathMax(y1, y2, y3, y4)
 
-    local checkForContainment = not ContainsWholeMap(minX, minY, maxX, maxY)
+    -- local checkForContainment = not ContainsWholeMap(minX, minY, maxX, maxY)
 
-    local y21 = (y2 - y1)
-    local y32 = (y3 - y2)
-    local y43 = (y4 - y3)
-    local y14 = (y1 - y4)
-    local x21 = (x2 - x1)
-    local x32 = (x3 - x2)
-    local x43 = (x4 - x3)
-    local x14 = (x1 - x4)
+    -- local y21 = (y2 - y1)
+    -- local y32 = (y3 - y2)
+    -- local y43 = (y4 - y3)
+    -- local y14 = (y1 - y4)
+    -- local x21 = (x2 - x1)
+    -- local x32 = (x3 - x2)
+    -- local x43 = (x4 - x3)
+    -- local x14 = (x1 - x4)
 
-    local function Contains(point)
-        local x0 = point[1]
-        local y0 = point[3]
-        if x0 < minX or x0 > maxX or y0 < minY or y0 > maxY then
-            return false
-        end
-        local s1 = (x1 - x0) * y21 - x21 * (y1 - y0)
-        local s2 = (x2 - x0) * y32 - x32 * (y2 - y0)
-        local s3 = (x3 - x0) * y43 - x43 * (y3 - y0)
-        local s4 = (x4 - x0) * y14 - x14 * (y4 - y0)
-        return (s1 > 0 and s2 > 0 and s3 > 0 and s4 > 0)
-    end
+    -- local function Contains(point)
+    --     local x0 = point[1]
+    --     local y0 = point[3]
+    --     if x0 < minX or x0 > maxX or y0 < minY or y0 > maxY then
+    --         return false
+    --     end
+    --     local s1 = (x1 - x0) * y21 - x21 * (y1 - y0)
+    --     local s2 = (x2 - x0) * y32 - x32 * (y2 - y0)
+    --     local s3 = (x3 - x0) * y43 - x43 * (y3 - y0)
+    --     local s4 = (x4 - x0) * y14 - x14 * (y4 - y0)
+    --     return (s1 > 0 and s2 > 0 and s3 > 0 and s4 > 0)
+    -- end
 
-    for _, r in Reclaim do
-        if (not checkForContainment or Contains(r.position)) then
-            onScreenReclaims[onScreenReclaimIndex] = r
-            onScreenReclaimIndex = onScreenReclaimIndex + 1
-        end
-    end
+    -- for _, r in Reclaim do
+    --     if (not checkForContainment or Contains(r.position)) then
+    --         onScreenReclaims[onScreenReclaimIndex] = r
+    --         onScreenReclaimIndex = onScreenReclaimIndex + 1
+    --     end
+    -- end
 
     local size
-    if Prefs.GetFromCurrentProfile('options.reclaim_overview_batching') == 1 then
-        size = _CombineReclaim(onScreenReclaims)
-    else
-        size = _CopyReclaim(onScreenReclaims)
-    end
+    -- if Prefs.GetFromCurrentProfile('options.reclaim_overview_batching') == 1 then
+    --     size = _CombineReclaim(onScreenReclaims)
+    -- else
+    --     size = _CopyReclaim(onScreenReclaims)
+    -- end
 
     table.sort(reclaimDataPool, CompareMass)
 
     local labelIndex = 1
-    if size then
-        for i = 1, size do
-            recl = reclaimDataPool[i]
-            if labelIndex > MaxLabels then
-                break
-            end
-            local label = LabelPool[labelIndex]
-            if label and IsDestroyed(label) then
-                label = nil
-            end
-            if not label then
-                label = CreateReclaimLabel(view.ReclaimGroup)
-                LabelPool[labelIndex] = label
-            end
+    -- if size then
+    --     for i = 1, size do
+    --         recl = reclaimDataPool[i]
+    --         if labelIndex > MaxLabels then
+    --             break
+    --         end
+    --         local label = LabelPool[labelIndex]
+    --         if label and IsDestroyed(label) then
+    --             label = nil
+    --         end
+    --         if not label then
+    --             label = CreateReclaimLabel(view.ReclaimGroup)
+    --             LabelPool[labelIndex] = label
+    --         end
 
-            label:DisplayReclaim(recl)
-            labelIndex = labelIndex + 1
+    --         label:DisplayReclaim(recl)
+    --         labelIndex = labelIndex + 1
+    --     end
+    -- else
+    for id, recl in Reclaim do
+        if labelIndex > MaxLabels then
+            break
         end
-    else
-        for _, recl in onScreenReclaims do
-            if labelIndex > MaxLabels then
-                break
-            end
-            local label = LabelPool[labelIndex]
-            if label and IsDestroyed(label) then
-                label = nil
-            end
-            if not label then
-                label = CreateReclaimLabel(view.ReclaimGroup)
-                LabelPool[labelIndex] = label
-            end
+        local label = LabelPool[labelIndex]
+        if label and IsDestroyed(label) then
+            label = nil
+        end
+        if not label then
+            label = CreateReclaimLabel(view.ReclaimGroup)
+            LabelPool[labelIndex] = label
+        end
 
-            label:DisplayReclaim(recl)
-            labelIndex = labelIndex + 1
-        end
+        label:DisplayReclaim(recl)
+        label.id = id
+        labelIndex = labelIndex + 1
     end
+    --end
     -- Hide labels we didn't use
     for index = labelIndex, MaxLabels do
         local label = LabelPool[index]
@@ -597,6 +602,29 @@ function InitReclaimGroup(view)
                 curPos[3] ~= self._prevPos[3] or zoom ~= self._prevZoom
             self._prevPos = curPos
             self._prevZoom = zoom
+            if not view.ShowingReclaim then
+                return
+            end
+            self:UpdatePositions()
+        end
+
+        rgroup.UpdatePositions = function(self)
+            local view = self.view
+            local positions = {}
+            for id, recl in Reclaim do
+                positions[id] = recl.position
+            end
+            --reprsl(positions)
+            --LOG("-----------------------------------------")
+            local proj = view:ProjectMultiple(positions)
+            --reprsl(proj)
+            for _, label in LabelPool do
+                local v = proj[label.id]
+                if not v then
+                    continue
+                end
+                label:SetScreenPos(v)
+            end
         end
     else
         view.ReclaimGroup:Show()
