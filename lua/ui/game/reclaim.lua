@@ -602,7 +602,7 @@ function InitReclaimGroup(view)
                 curPos[3] ~= self._prevPos[3] or zoom ~= self._prevZoom
             self._prevPos = curPos
             self._prevZoom = zoom
-            if not view.ShowingReclaim then
+            if not view.ShowingReclaim or not self.isMoving then
                 return
             end
             self:UpdatePositions()
