@@ -19,7 +19,7 @@ local function AddRallyPoint(unit)
     if rallyMeshes[commandOfInterest.type] == nil and commandMeshResources[commandOfInterest.type] == nil then
         return
     end
-
+    ---@type WorldMesh
     local mesh = WorldMesh()
     mesh.unit = unit
     table.insert(meshes, mesh)

@@ -141,6 +141,66 @@ Callbacks.ClearCommands = function(data, units)
     IssueClearCommands(safe)
 end
 
+local VDist3 = VDist3
+local MATH_Lerp = MATH_Lerp
+local function ComputeLen(curve)
+    local l = 0
+    local prev = nil
+    for _, point in curve do
+        if prev then
+            l = l + VDist3(prev, point)
+        end
+        prev = point
+    end
+    return l
+end
+
+Callbacks.LineMove = function(data, units)
+    if not data.Curve then
+        return
+    end
+    local curve = data.Curve
+    local len = ComputeLen(curve)
+    if len == 0 then return end
+    if data.Clear then
+        IssueClearCommands(units)
+    end
+
+    local unitCount = table.getn(units)
+    local pointsCount = table.getn(curve)
+
+    local distBetween = len / (unitCount + 1)
+    local currentSegmentLength = distBetween
+    local curUnitPosition = 1
+
+    local prevPoint = nil
+    local i         = 1
+    while i < pointsCount do
+        local p1 = prevPoint or curve[i]
+        local p2 = curve[i + 1]
+        local dist = VDist3(p1, p2)
+        if dist > currentSegmentLength then
+            local s = currentSegmentLength / dist
+            local unitPos = {
+                MATH_Lerp(s, p1[1], p2[1]),
+                MATH_Lerp(s, p1[2], p2[2]),
+                MATH_Lerp(s, p1[3], p2[3]),
+            }
+            IssueMove({ units[curUnitPosition] }, unitPos)
+            prevPoint = unitPos
+            curUnitPosition = curUnitPosition + 1
+            currentSegmentLength = distBetween
+            if curUnitPosition > unitCount then
+                break
+            end
+        else
+            currentSegmentLength = currentSegmentLength - dist
+            prevPoint = p2
+            i = i + 1
+        end
+    end
+end
+
 Callbacks.BreakAlliance = SimUtils.BreakAlliance
 
 Callbacks.GiveUnitsToPlayer = SimUtils.GiveUnitsToPlayer
@@ -773,7 +833,8 @@ do
 
         local start = GetSystemTimeSecondsOnlyForProfileUse()
         import("/lua/sim/commands/area-reclaim-order.lua").AreaReclaimProps(selection, ps, pe, Width, true)
-        SPEW("Time taken for area reclaim order: ", 1000 * (GetSystemTimeSecondsOnlyForProfileUse() - start), "miliseconds")
+        SPEW("Time taken for area reclaim order: ", 1000 * (GetSystemTimeSecondsOnlyForProfileUse() - start),
+            "miliseconds")
     end
 
     ---@param data table
@@ -795,11 +856,12 @@ do
         end
 
         local target = lastCommand.target --[[@as Unit | Prop]]
-        
+
         local start = GetSystemTimeSecondsOnlyForProfileUse()
         import("/lua/sim/commands/area-attack-ground-order.lua").AreaAttackOrder(selection,
             { lastCommand.x, lastCommand.y, lastCommand.z }, true, data.Radius)
-        SPEW("Time taken for area attack order: ", 1000 * (GetSystemTimeSecondsOnlyForProfileUse() - start), "miliseconds")
+        SPEW("Time taken for area attack order: ", 1000 * (GetSystemTimeSecondsOnlyForProfileUse() - start),
+            "miliseconds")
     end
 
 end
