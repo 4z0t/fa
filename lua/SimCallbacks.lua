@@ -160,6 +160,7 @@ local lineMoveOrders = {
     ["Attack"] = IssueAttack,
     ["Tactical"] = IssueTactical,
     ["Nuke"] = IssueNuke,
+    ["AttackMove"] = IssueAggressiveMove,
 }
 
 Callbacks.LineMove = function(data, units)
