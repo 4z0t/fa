@@ -155,16 +155,30 @@ local function ComputeLen(curve)
     return l
 end
 
+local lineMoveOrders = {
+    ["Move"] = IssueMove,
+    ["Attack"] = IssueAttack,
+    ["Tactical"] = IssueTactical,
+    ["Nuke"] = IssueNuke,
+}
+
 Callbacks.LineMove = function(data, units)
-    if not data.Curve then
+    if not data.Curve or
+        not data.Order or
+        not units or
+        not OkayToMessWithArmy(data.Army)
+    then
         return
     end
+
     local curve = data.Curve
     local len = ComputeLen(curve)
     if len == 0 then return end
     if data.Clear then
         IssueClearCommands(units)
     end
+
+    local issueOrder = lineMoveOrders[data.Order] or IssueMove
 
     local unitCount = table.getn(units)
     local pointsCount = table.getn(curve)
@@ -186,7 +200,7 @@ Callbacks.LineMove = function(data, units)
                 MATH_Lerp(s, p1[2], p2[2]),
                 MATH_Lerp(s, p1[3], p2[3]),
             }
-            IssueMove({ units[curUnitPosition] }, unitPos)
+            issueOrder({ units[curUnitPosition] }, unitPos)
             prevPoint = unitPos
             curUnitPosition = curUnitPosition + 1
             currentSegmentLength = distBetween
